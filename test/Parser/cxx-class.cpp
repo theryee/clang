@@ -120,16 +120,35 @@ namespace ctor_error {
     // expected-error{{unknown type name 'UnknownType'}}
 }
 
-namespace nns_decl {
-  struct A {
-    struct B;
+namespace NestedNameSpecifiers {
+  struct OuterStruct {
+    struct InnerStruct;
   };
-  namespace N {
-    union C;
+  namespace UnionOuterNamespace {
+    union UnionInner;
   }
-  struct A::B; // expected-error {{forward declaration of struct cannot have a nested name specifier}}
-  union N::C; // expected-error {{forward declaration of union cannot have a nested name specifier}}
+	class OuterClass{
+		class InnerClass;
+	};
+
+  struct OuterStruct::InnerStruct; // expected-error {{forward declaration of struct cannot have a nested name specifier}}
+  struct ::NestedNameSpecifiers::OuterStruct::InnerStruct; // expected-error {{forward declaration of struct cannot have a nested name specifier}}
+
+  union UnionOuterNamespace::UnionInner; // expected-error {{forward declaration of union cannot have a nested name specifier}}
+  union ::NestedNameSpecifiers::UnionOuterNamespace::UnionInner; // expected-error {{forward declaration of union cannot have a nested name specifier}}
+
+  class OuterClass::InnerClass; // expected-error {{forward declaration of class cannot have a nested name specifier}}
+  class ::NestedNameSpecifiers::OuterClass::InnerClass; // expected-error {{forward declaration of class cannot have a nested name specifier}}
 }
+
+// Testing the global "nested" name qualifier
+class GlobalSpecifierOuterClass {class InnerClass;};
+class ::GlobalSpecifierOuterClass; // expected-error {{forward declaration of class cannot have a nested name specifier}} expected-warning {{extra qualification on member 'GlobalSpecifierOuterClass'}}
+class GlobalSpecifierOuterClass;
+// specializations of qualified type introduction?
+class GlobalSpecifierOuterClass::InnerClass; // expected-error {{forward declaration of class cannot have a nested name specifier}}
+class ::GlobalSpecifierOuterClass::InnerClass; // expected-error {{forward declaration of class cannot have a nested name specifier}}
+
 
 // PR13775: Don't assert here.
 namespace PR13775 {
